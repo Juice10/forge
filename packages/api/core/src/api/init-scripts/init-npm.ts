@@ -16,7 +16,14 @@ export function siblingDep(name: string): string {
 }
 
 export const deps = ['electron-squirrel-startup'];
-export const devDeps = [siblingDep('cli'), siblingDep('maker-squirrel'), siblingDep('maker-zip'), siblingDep('maker-deb'), siblingDep('maker-rpm')];
+export const devDeps = [
+  siblingDep('cli'),
+  siblingDep('maker-squirrel'),
+  siblingDep('maker-zip'),
+  siblingDep('maker-deb'),
+  siblingDep('maker-rpm'),
+  siblingDep('plugin-auto-unpack-natives'),
+];
 export const exactDevDeps = ['electron'];
 
 export const initNPM = async (dir: string, task: ForgeListrTask<any>): Promise<void> => {
