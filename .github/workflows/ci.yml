@@ -34,6 +34,8 @@ jobs:
         run: yarn install
       - name: Lint
         run: yarn lint
+      - name: Ensure packages in sync
+        run: yarn syncpack
       - name: Build
         run: yarn build
       - name: Run tests
@@ -74,6 +76,6 @@ jobs:
       - name: Build
         run: yarn build
       - name: Test
-        run: yarn test
+        run: yarn test:slow
         env:
           DEBUG: electron-installer-snap:snapcraft

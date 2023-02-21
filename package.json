@@ -1,6 +1,6 @@
 {
   "name": "electron-forge",
-  "version": "6.0.1",
+  "version": "0.0.0-development",
   "private": true,
   "license": "MIT",
   "engines": {
@@ -8,19 +8,19 @@
   },
   "scripts": {
     "clean": "rimraf dist && lerna exec -- rimraf dist tsconfig.tsbuildinfo",
-    "build": "lerna exec -- tsc --emitDeclarationOnly && yarn build:fast",
-    "build:fast": "lerna exec -- swc src --out-dir dist --quiet --extensions \".ts\" --config-file ../../../.swcrc",
-    "build:full": "lerna exec -- tsc -b",
+    "build": "tsc -b packages",
+    "build:watch": "yarn build --watch",
     "postbuild": "ts-node tools/test-dist",
-    "docs": "yarn build:full && yarn docs:generate",
+    "docs": "yarn build && yarn docs:generate",
     "docs:generate": "yarn docs:plugin && node --max-old-space-size=8192 -r ts-node/register ./tools/gen-docs.ts",
     "docs:plugin": "cd ./tools/doc-plugin && yarn build",
-    "docs:deploy:build": "yarn docs",
+    "lerna:publish": "lerna publish --force-publish --conventional-commits --no-changelog --exact",
     "lint": "prettier --check . && eslint .",
     "lint:fix": "prettier --write .",
     "link:prepare": "lerna exec -- node ../../../tools/silent.js yarn link --link-folder ../../../.links --silent --no-bin-links",
     "test": "xvfb-maybe cross-env LINK_FORGE_DEPENDENCIES_ON_INIT=1 TS_NODE_PROJECT='./tsconfig.test.json' TS_NODE_FILES=1 mocha './tools/test-globber.ts'",
     "test:fast": "xvfb-maybe cross-env LINK_FORGE_DEPENDENCIES_ON_INIT=1 TS_NODE_PROJECT='./tsconfig.test.json' TEST_FAST_ONLY=1 TS_NODE_FILES=1 mocha './tools/test-globber.ts'",
+    "test:slow": "xvfb-maybe cross-env LINK_FORGE_DEPENDENCIES_ON_INIT=1 TS_NODE_PROJECT='./tsconfig.test.json' TEST_SLOW_ONLY=1 TS_NODE_FILES=1 mocha './tools/test-globber.ts'",
     "postinstall": "rimraf node_modules/.bin/*.ps1 && ts-node ./tools/gen-tsconfigs.ts && ts-node ./tools/gen-ts-glue.ts",
     "prepare": "husky install",
     "preversion": "yarn build"
@@ -78,11 +78,9 @@
     "yarn-or-npm": "^3.0.1"
   },
   "devDependencies": {
+    "@electron/fuses": ">=1.0.0",
     "@knodes/typedoc-plugin-monorepo-readmes": "0.22.5",
     "@malept/eslint-config": "^2.0.0",
-    "@swc/cli": "^0.1.49",
-    "@swc/core": "^1.2.87",
-    "@swc/register": "^0.1.7",
     "@types/chai": "^4.2.12",
     "@types/chai-as-promised": "^7.1.2",
     "@types/cross-spawn": "^6.0.1",
@@ -123,9 +121,10 @@
     "fork-ts-checker-webpack-plugin": "^7.2.13",
     "generate-changelog": "^1.8.0",
     "husky": "^7.0.1",
+    "inquirer": "^8.0.0",
     "lerna": "^6.0.1",
     "lint-staged": "^12.1.7",
-    "listr2": "^4.0.4",
+    "listr2": "^5.0.3",
     "minimist": "^1.2.6",
     "mocha": "^9.0.1",
     "prettier": "^2.4.0",
@@ -133,12 +132,14 @@
     "rimraf": "^3.0.1",
     "sinon": "^13.0.1",
     "sinon-chai": "^3.6.0",
+    "syncpack": "^8.4.11",
     "ts-node": "^10.0.0",
     "typedoc": "^0.22.15",
     "typedoc-plugin-missing-exports": "^1.0.0",
     "typedoc-plugin-rename-defaults": "^0.6.4",
     "typescript": "^4.6.3",
-    "xvfb-maybe": "^0.2.1"
+    "xvfb-maybe": "^0.2.1",
+    "yaml-hook": "^1.0.0"
   },
   "optionalDependencies": {
     "@malept/electron-installer-flatpak": "^0.11.2",
@@ -151,12 +152,16 @@
     "electron-wix-msi": "^5.0.0",
     "macos-alias": "^0.2.11"
   },
+  "peerDependencies": {
+    "@electron/fuses": ">=1.0.0"
+  },
   "lint-staged": {
     "*.{html,json,md,yml}": "prettier --write",
     "*.{js,ts}": [
       "prettier --write",
       "eslint --fix"
-    ]
+    ],
+    "*.{json,lock}": "syncpack"
   },
   "prettier": {
     "singleQuote": true

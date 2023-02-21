@@ -106,7 +106,7 @@ export const listrMake = (
       collapseErrors: false,
     },
     rendererSilent: !interactive,
-    rendererFallback: Boolean(process.env.DEBUG && process.env.DEBUG.includes('electron-forge')),
+    rendererFallback: Boolean(process.env.DEBUG),
   };
 
   const runner = new Listr<MakeContext>(
@@ -282,15 +282,10 @@ export const listrMake = (
                       arch: targetArch,
                     });
                   } catch (err) {
-                    if (err instanceof Error) {
-                      throw {
-                        message: `An error occured while making for target: ${maker.name}`,
-                        stack: `${err.message}\n${err.stack}`,
-                      };
-                    } else if (err) {
+                    if (err) {
                       throw err;
                     } else {
-                      throw new Error(`An unknown error occured while making for target: ${maker.name}`);
+                      throw new Error(`An unknown error occurred while making for target: ${maker.name}`);
                     }
                   }
                 },
