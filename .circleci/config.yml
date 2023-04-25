@@ -8,7 +8,7 @@ executors:
   linux:
     docker:
       - image: cimg/base:stable
-  macos-monterey:
+  macos:
     macos:
       xcode: '13.4.0'
     resource_class: macos.x86.medium.gen2
@@ -20,33 +20,40 @@ executors:
 
 commands:
   install:
+    parameters:
+      os:
+        type: executor
     steps:
       - run: git config --global core.autocrlf input
       - when:
-        condition:
-          equal: ['windows', << parameters.os >>]
-        steps:
-          - node/install:
-            node-version: '8.19.4'
-          - run: nvm use 8.19.4
+          condition:
+            equal: [<< parameters.os >>, 'windows']
+          steps:
+            - node/install:
+                node-version: '8.19.4'
+            - run: nvm use 9.19.4
       - when:
-        condition:
-          not: ['windows', << parameters.os >>]
-        steps:
-          - node/install:
-            node-version: '14.17.2'
-          - run: nvm use 14.17.2
+          condition:
+            or:
+              - equal: [<< parameters.os >>, 'macos']
+              - equal: [<< parameters.os >>, 'linux']
+          steps:
+            - node/install:
+                node-version: '14.17.2'
+            - run: nvm use 14.17.2
       - checkout
       - restore_cache:
-        keys:
-          - v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
-          - v1-dependencies{{ arch }}
+          name: Restore Cached Dependencies
+          keys:
+            - v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
+            - v1-dependencies{{ arch }}
       - run: npm install --global yarn
       - run: yarn install --frozen-lockfile
       - save_cache:
-        paths:
-          - node_modules
-        key: v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
+          name: Cache Installed Dependencies
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
 
 jobs:
   fast-tests:
@@ -58,30 +65,41 @@ jobs:
         enum: ['x64', 'arm64']
     executor: << parameters.os >>
     steps:
-      - install
-      - yarn lint
+      - install:
+          os: '<< parameters.os >>'
+      - run: yarn lint
       - run: yarn syncpack
       - run: yarn build
       - run: yarn test:fast
   slow-tests:
+    parameters:
+      os:
+        type: executor
+      arch:
+        type: enum
+        enum: ['x64', 'arm64']
+    executor: << parameters.os >>
     steps:
-      - install
-      - yarn lint
+      - install:
+          os: '<< parameters.os >>'
+      - run: yarn lint
       - when:
-        equal: ['windows', << parameters.os >>]
-        steps:
-          - run: echo 'C:\Program Files (x86)\WiX Toolset v3.11\bin' >> $GITHUB_PATH
-          - run: npm config set node-gyp "$GITHUB_WORKSPACE\node_modules\node-gyp\bin\node-gyp.js"
+          condition:
+            equal: ['windows', << parameters.os >>]
+          steps:
+            - run: echo 'C:\Program Files (x86)\WiX Toolset v3.11\bin' >> $GITHUB_PATH
+            - run: npm config set node-gyp "$GITHUB_WORKSPACE\node_modules\node-gyp\bin\node-gyp.js"
       - when:
-        equal: ['linux', << parameters.os >>]
-        steps:
-          - run: sudo add-apt-repository -y ppa:alexlarsson/flatpak
-          - run: sudo rm /etc/apt/sources.list.d/bazel.list
-          - run: sudo rm /etc/apt/sources.list.d/mongo*.list
-          - run: grep -l opensuse /etc/apt/sources.list.d/* | xargs sudo rm
-          - run: sudo apt-get update
-          - run: sudo apt-get install -y --no-install-recommends snapcraft flatpak-builder elfutils
-          - run: ci/install_runtimes.sh
+          condition:
+            equal: ['linux', << parameters.os >>]
+          steps:
+            - run: sudo add-apt-repository -y ppa:alexlarsson/flatpak
+            - run: sudo rm /etc/apt/sources.list.d/bazel.list
+            - run: sudo rm /etc/apt/sources.list.d/mongo*.list
+            - run: grep -l opensuse /etc/apt/sources.list.d/* | xargs sudo rm
+            - run: sudo apt-get update
+            - run: sudo apt-get install -y --no-install-recommends snapcraft flatpak-builder elfutils
+            - run: ci/install_runtimes.sh
       - run: yarn build
       - run: yarn test:slow
 
@@ -91,7 +109,7 @@ workflows:
       - fast-tests:
           matrix:
             parameters:
-              os: [windows, linux, macos-monterey]
+              os: [windows, linux, macos]
               arch: [x64, arm64]
             exclude:
               - os: windows
@@ -101,7 +119,7 @@ workflows:
       - slow-tests:
           matrix:
             parameters:
-              os: [windows, linux, macos-monterey]
+              os: [windows, linux, macos]
               arch: [x64, arm64]
             exclude:
               - os: windows
