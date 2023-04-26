@@ -28,17 +28,14 @@ commands:
       - checkout
       - node/install:
           install-yarn: true
-          node-version: '18.4.0'
-      - run: nvm use 18.4.0
+          node-version: '14.18.0'
+      - run: nvm use 14.18.0
       - run: echo "THIS IS THE OS- << parameters.platform >>"
       - when:
           condition:
             equal: ['windows', << parameters.platform >>]
           steps:
-            - run:
-                name: Install npm 8 on Windows
-                command: |
-                  npm install -g npm@8
+            - run: npm install -g npm@8
       - restore_cache:
           name: Restore Cached Dependencies
           keys:
@@ -64,6 +61,28 @@ jobs:
       - install:
           platform: '<< parameters.platform >>'
       - run: yarn lint
+      - when:
+          condition:
+            equal: ['windows', << parameters.platform >>]
+          steps:
+            - run:
+                name: Windows specific setup
+                command: |
+                  echo 'C:\Program Files (x86)\WiX Toolset v3.11\bin' >> $GITHUB_PATH
+                  npm config set node-gyp "$GITHUB_WORKSPACE\node_modules\node-gyp\bin\node-gyp.js"
+      - when:
+          condition:
+            equal: ['linux', << parameters.platform >>]
+          steps:
+            - run:
+                name: Linux Specific setup
+                command: |
+                  sudo add-apt-repository -y ppa:alexlarsson/flatpak
+                  sudo rm /etc/apt/sources.list.d/mongo*.list
+                  grep -l opensuse /etc/apt/sources.list.d/* | xargs sudo rm
+                  sudo apt-get update
+                  sudo apt-get install -y --no-install-recommends snapcraft flatpak-builder elfutils
+                  ci/install_runtimes.sh
       - run: yarn syncpack
       - run: yarn build
       - run: yarn test:fast
@@ -96,7 +115,6 @@ jobs:
                 name: Linux Specific setup
                 command: |
                   sudo add-apt-repository -y ppa:alexlarsson/flatpak
-                  sudo rm /etc/apt/sources.list.d/bazel.list
                   sudo rm /etc/apt/sources.list.d/mongo*.list
                   grep -l opensuse /etc/apt/sources.list.d/* | xargs sudo rm
                   sudo apt-get update
