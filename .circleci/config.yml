@@ -21,8 +21,8 @@ executors:
 commands:
   install:
     parameters:
-      os:
-        type: executor
+      platform:
+        type: string
     steps:
       - run: git config --global core.autocrlf input
       - checkout
@@ -30,10 +30,10 @@ commands:
           install-yarn: true
           node-version: '18.4.0'
       - run: nvm use 18.4.0
-      - run: echo "THIS IS THE OS- << parameters.os >>"
+      - run: echo "THIS IS THE OS- << parameters.platform >>"
       - when:
           condition:
-            equal: ['windows', << parameters.os >>]
+            equal: ['windows', << parameters.platform >>]
           steps:
             - run:
                 name: Install npm 8 on Windows
@@ -54,34 +54,34 @@ commands:
 jobs:
   fast-tests:
     parameters:
-      os:
-        type: executor
+      platform:
+        type: string
       arch:
         type: enum
         enum: ['x64', 'arm64']
-    executor: << parameters.os >>
+    executor: << parameters.platform >>
     steps:
       - install:
-          os: '<< parameters.os >>'
+          platform: '<< parameters.platform >>'
       - run: yarn lint
       - run: yarn syncpack
       - run: yarn build
       - run: yarn test:fast
   slow-tests:
     parameters:
-      os:
-        type: executor
+      platform:
+        type: string
       arch:
         type: enum
         enum: ['x64', 'arm64']
-    executor: << parameters.os >>
+    executor: << parameters.platform >>
     steps:
       - install:
-          os: '<< parameters.os >>'
+          platform: '<< parameters.platform >>'
       - run: yarn lint
       - when:
           condition:
-            equal: ['windows', << parameters.os >>]
+            equal: ['windows', << parameters.platform >>]
           steps:
             - run:
                 name: Windows specific setup
@@ -90,7 +90,7 @@ jobs:
                   npm config set node-gyp "$GITHUB_WORKSPACE\node_modules\node-gyp\bin\node-gyp.js"
       - when:
           condition:
-            equal: ['linux', << parameters.os >>]
+            equal: ['linux', << parameters.platform >>]
           steps:
             - run:
                 name: Linux Specific setup
@@ -111,20 +111,20 @@ workflows:
       - fast-tests:
           matrix:
             parameters:
-              os: [windows, linux, macos]
+              platform: [windows, linux, macos]
               arch: [x64, arm64]
             exclude:
-              - os: windows
+              - platform: windows
                 arch: arm64
-              - os: linux
+              - platform: linux
                 arch: arm64
       - slow-tests:
           matrix:
             parameters:
-              os: [windows, linux, macos]
+              platform: [windows, linux, macos]
               arch: [x64, arm64]
             exclude:
-              - os: windows
+              - platform: windows
                 arch: arm64
-              - os: linux
+              - platform: linux
                 arch: arm64
