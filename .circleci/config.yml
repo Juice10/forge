@@ -30,17 +30,18 @@ commands:
           install-yarn: true
           node-version: '14.18.0'
       - run: nvm use 14.18.0
-      - run: echo "THIS IS THE OS- << parameters.platform >>"
-      - when:
-          condition:
-            equal: ['windows', << parameters.platform >>]
-          steps:
-            - run: npm install -g npm@8
+      # - when:
+      #     condition:
+      #       equal: ['windows', << parameters.platform >>]
+      #     steps:
+      #       - run: npm install -g npm@8
       - restore_cache:
           name: Restore Cached Dependencies
           keys:
             - v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
             - v1-dependencies{{ arch }}
+      - run: npm install -g yarn
+      - run: yarn --version
       - run: yarn install --frozen-lockfile
       - save_cache:
           name: Cache Installed Dependencies
@@ -78,8 +79,6 @@ jobs:
                 name: Linux Specific setup
                 command: |
                   sudo add-apt-repository -y ppa:alexlarsson/flatpak
-                  sudo rm /etc/apt/sources.list.d/mongo*.list
-                  grep -l opensuse /etc/apt/sources.list.d/* | xargs sudo rm
                   sudo apt-get update
                   sudo apt-get install -y --no-install-recommends snapcraft flatpak-builder elfutils
                   ci/install_runtimes.sh
@@ -115,8 +114,6 @@ jobs:
                 name: Linux Specific setup
                 command: |
                   sudo add-apt-repository -y ppa:alexlarsson/flatpak
-                  sudo rm /etc/apt/sources.list.d/mongo*.list
-                  grep -l opensuse /etc/apt/sources.list.d/* | xargs sudo rm
                   sudo apt-get update
                   sudo apt-get install -y --no-install-recommends snapcraft flatpak-builder elfutils
                   ci/install_runtimes.sh
