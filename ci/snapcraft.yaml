@@ -1,9 +1,9 @@
 name: electron-app
 version: '1.0.0'
+base: 'core18'
 summary: App summary
 description: |
   App description
-
 grade: devel
 confinement: devmode
 
