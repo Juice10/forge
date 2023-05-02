@@ -70,11 +70,6 @@ commands:
           key: v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
 
 jobs:
-  # build-snap:
-  #   docker:
-  #     - image: snapcore/snapcraft:latest
-  #   steps:
-  #     checkout
   fast-tests:
     parameters:
       platform:
@@ -122,17 +117,29 @@ jobs:
           condition:
             equal: ['windows', << parameters.platform >>]
           steps:
-            - setup-windows
+            - run:
+                name: setup Windows and run slow tests
+                shell: powershell.exe -ExecutionPolicy Bypass
+                command: |
+                  Write-Output "Installing WiX Toolset"
+                  choco install --no-progress -y wixtoolset
+                  Write-Output "Reloading PATH"
+                  $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+                  echo $env:Path
+                  [Environment]::SetEnvironmentVariable("PATH", $env:Path + "C:\Program Files (x86)\WiX Toolset v3.11\bin;", "Machine")
+                  refreshenv
+                  $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+                  echo $env:Path
+                  npm config set node-gyp "$CIRCLE_WORKING_DIRECTORY\node_modules\node-gyp\bin\node-gyp.js"
+
+                  yarn build
+                  yarn test:slow
       - when:
           condition:
             equal: ['linux', << parameters.platform >>]
           steps:
-            #   - run:
-            #       name: Build Docker Image
-            #       command: |
-            #         docker build -t circleci/desktop-base-ubuntu-snap .
             - run:
-                name: Linux Specific setup 1
+                name: setup Linux and run slow tests
                 command: |
                   sudo add-apt-repository -y ppa:alexlarsson/flatpak
                   sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 536F8F1DE80F6A35
@@ -140,6 +147,19 @@ jobs:
                   sudo apt-get update
                   sudo apt-get install -y --no-install-recommends snapcraft flatpak-builder elfutils
                   ci/install_runtimes.sh
+
+                  yarn build
+                  yarn test:slow
+      - when:
+          condition:
+            equal: ['macos', << parameters.platform >>]
+          steps:
+            - run:
+                name: run slow tests
+                command: |
+                  yarn build
+                  yarn test:slow
+
             # - run:
             #     name: Linux Specific setup 2
             #     command: |
@@ -152,8 +172,6 @@ jobs:
             # - run: curl -I https://flathub.org
             # - run: openssl s_client -verify_return_error -connect flathub.org:443
             # - run: ci/install_runtimes.sh
-      - run: yarn build
-      - run: yarn test:slow
 
 workflows:
   tests:
