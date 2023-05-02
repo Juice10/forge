@@ -87,7 +87,7 @@ jobs:
             equal: ['windows', << parameters.platform >>]
           steps:
             run:
-              name: setup Windows and run slow tests
+              name: setup Windows and run fast tests
               shell: powershell.exe -ExecutionPolicy Bypass
               command: |
                 Write-Output "Installing WiX Toolset"
@@ -100,6 +100,8 @@ jobs:
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
                 echo $env:Path
                 npm config set node-gyp "$CIRCLE_WORKING_DIRECTORY\node_modules\node-gyp\bin\node-gyp.js"
+                Get-Command npm
+                where npm
 
                 yarn syncpack
                 yarn build
