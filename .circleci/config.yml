@@ -41,24 +41,16 @@ commands:
       platform:
         type: string
     steps:
-      - checkout
       - node/install:
-          install-yarn: true
           node-version: '14.18.0'
-      - when:
-          condition:
-            or:
-              - equal: ['windows', << parameters.platform >>]
-              - equal: ['macos', << parameters.platform >>]
-          steps:
-            - run: nvm use 14.18.0
+      - run: nvm use 14.18.0
+      - checkout
       - restore_cache:
           name: Restore Cached Dependencies
           keys:
             - v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
             - v1-dependencies{{ arch }}
-      - run: npm install -g yarn
-      - run: yarn --version
+      - run: npm install --global yarn
       - run: yarn install --frozen-lockfile
       - save_cache:
           name: Cache Installed Dependencies
@@ -76,9 +68,15 @@ jobs:
         enum: ['x64', 'arm64']
     executor: << parameters.platform >>
     steps:
-      - install:
-          platform: '<< parameters.platform >>'
-      - run: yarn lint
+      - when:
+          condition:
+            or:
+              - equal: ['windows', << parameters.platform >>]
+              - equal: ['macos', << parameters.platform >>]
+          steps:
+            - install:
+                platform: '<< parameters.platform >>'
+            - run: yarn lint
       - when:
           condition:
             equal: ['windows', << parameters.platform >>]
@@ -112,9 +110,13 @@ jobs:
                 name: setup Linux and run fast tests
                 command: |
                   sudo add-apt-repository -y ppa:alexlarsson/flatpak
-                  sudo apt-get update
+                  sudo apt-get -y update
                   sudo apt-get install -y --no-install-recommends git flatpak-builder elfutils
-                  git config --global core.autocrlf input
+            - install:
+                platform: '<< parameters.platform >>'
+            - run: yarn lint
+            - run:
+                command: |
                   ci/install_runtimes.sh
 
                   yarn syncpack
@@ -140,9 +142,15 @@ jobs:
         enum: ['x64', 'arm64']
     executor: << parameters.platform >>
     steps:
-      - install:
-          platform: '<< parameters.platform >>'
-      - run: yarn lint
+      - when:
+          condition:
+            or:
+              - equal: ['windows', << parameters.platform >>]
+              - equal: ['macos', << parameters.platform >>]
+          steps:
+            - install:
+                platform: '<< parameters.platform >>'
+            - run: yarn lint
       - when:
           condition:
             equal: ['windows', << parameters.platform >>]
@@ -177,6 +185,11 @@ jobs:
                   sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
                   sudo apt-get update
                   sudo apt-get install -y --no-install-recommends git flatpak-builder elfutils
+            - install:
+                platform: '<< parameters.platform >>'
+            - run: yarn lint
+            - run:
+                command: |
                   git config --global core.autocrlf input
                   ci/install_runtimes.sh
 
