@@ -119,7 +119,7 @@ jobs:
             - run: yarn lint
             - run:
                 command: |
-                  ci/install_runtimes.sh
+                  sudo ci/install_runtimes.sh
 
                   yarn syncpack
                   yarn build
@@ -194,7 +194,7 @@ jobs:
             - run:
                 command: |
                   git config --global core.autocrlf input
-                  ci/install_runtimes.sh
+                  sudo ci/install_runtimes.sh
 
                   yarn build
                   yarn test:slow
