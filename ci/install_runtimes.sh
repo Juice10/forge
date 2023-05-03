@@ -1,3 +1,4 @@
+
 #!/bin/bash -xe
 
 install_app() {
