@@ -7,7 +7,7 @@ orbs:
 executors:
   linux:
     docker:
-      - image: cimg/base:stable
+      - image: ubuntudesktop/gnome-3-38-2004
   macos:
     macos:
       xcode: '13.4.0'
@@ -49,7 +49,6 @@ commands:
       #           name: Build Docker Image
       #           command: |
       #             docker build -t circleci/desktop-base-ubuntu-snap .
-      - run: git config --global core.autocrlf input
       - checkout
       - node/install:
           install-yarn: true
@@ -90,6 +89,7 @@ jobs:
               name: setup Windows and run fast tests
               shell: powershell.exe -ExecutionPolicy Bypass
               command: |
+                git config --global core.autocrlf input
                 Write-Output "Installing WiX Toolset"
                 choco install --no-progress -y wixtoolset
                 Write-Output "Reloading PATH"
@@ -115,7 +115,8 @@ jobs:
                 command: |
                   sudo add-apt-repository -y ppa:alexlarsson/flatpak
                   sudo apt-get update
-                  sudo apt-get install -y --no-install-recommends snapcraft flatpak-builder elfutils
+                  sudo apt-get install -y --no-install-recommends git flatpak-builder elfutils
+                  git config --global core.autocrlf input
                   ci/install_runtimes.sh
 
                   yarn syncpack
@@ -128,6 +129,7 @@ jobs:
             - run:
                 name: run fast tests
                 command: |
+                  git config --global core.autocrlf input
                   yarn syncpack
                   yarn build
                   yarn test:fast
@@ -151,6 +153,7 @@ jobs:
                 name: setup Windows and run slow tests
                 shell: powershell.exe -ExecutionPolicy Bypass
                 command: |
+                  git config --global core.autocrlf input
                   Write-Output "Installing WiX Toolset"
                   choco install --no-progress -y wixtoolset
                   Write-Output "Reloading PATH"
@@ -175,7 +178,8 @@ jobs:
                   sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 536F8F1DE80F6A35
                   sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
                   sudo apt-get update
-                  sudo apt-get install -y --no-install-recommends snapcraft flatpak-builder elfutils
+                  sudo apt-get install -y --no-install-recommends git flatpak-builder elfutils
+                  git config --global core.autocrlf input
                   ci/install_runtimes.sh
 
                   yarn build
@@ -187,6 +191,7 @@ jobs:
             - run:
                 name: run slow tests
                 command: |
+                  git config --global core.autocrlf input
                   yarn build
                   yarn test:slow
 
