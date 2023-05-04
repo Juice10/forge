@@ -193,6 +193,11 @@ jobs:
             - install:
                 platform: '<< parameters.platform >>'
             - run: yarn lint
+            - run: cp ./.circleci/snapcraft-wrapper /snap/bin/snapcraft
+            - run:
+                command: |
+                  echo 'export PATH=/snap/bin:"$PATH"' >> "$BASH_ENV"
+                  source "$BASH_ENV"
             - run:
                 command: |
                   git config --global core.autocrlf input
@@ -210,19 +215,6 @@ jobs:
                   git config --global core.autocrlf input
                   yarn build
                   yarn test:slow
-
-            # - run:
-            #     name: Linux Specific setup 2
-            #     command: |
-            #       # sudo add-apt-repository -y ppa:alexlarsson/flatpak
-            #       # grep -l opensuse /etc/apt/sources.list.d/* | xargs sudo rm -f
-            #       sudo apt-get update
-            #       # sudo apt-get install -y --no-install-recommends snapcraft flatpak-builder elfutils
-            #       # ci/install_runtimes.sh
-            # - run: sudo apt-get install -y --no-install-recommends flatpak-builder elfutils
-            # - run: curl -I https://flathub.org
-            # - run: openssl s_client -verify_return_error -connect flathub.org:443
-            # - run: ci/install_runtimes.sh
 
 workflows:
   tests:
