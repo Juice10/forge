@@ -30,6 +30,6 @@ install_app x86_64 org.electronjs.Electron2.BaseApp stable
 mkdir -p fakesnap/snap
 cp ci/snapcraft.yaml fakesnap/snap/
 pushd fakesnap
-snapcraft pull desktop-gtk3 electron-deps
+snapcraft
 popd
 rm -r fakesnap
